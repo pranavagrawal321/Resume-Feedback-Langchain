@@ -1,0 +1,7 @@
+bs4==0.0.2
+fake-useragent==1.5.1
+langchain-community==0.3.1
+langchain-core==0.3.7
+langchain-groq==0.2.0
+PyPDF2==3.0.1
+streamlit==1.38.0

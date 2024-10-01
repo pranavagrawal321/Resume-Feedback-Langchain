@@ -7,22 +7,18 @@ import json
 import warnings
 from fake_useragent import UserAgent
 import os
-
-# Suppress warnings if necessary
 warnings.filterwarnings("ignore")
 
-# Set up user agent
 ua = UserAgent()
 os.environ['USER_AGENT'] = ua.random
 
-# Initialize the app
 st.title("Job Helper")
 
-# Initialize the LLM
 llm = ChatGroq(
-    groq_api_key='<api-key>',  # Replace with your actual key
+    groq_api_key='<api-key>',
     model_name='llama-3.1-70b-versatile'
 )
+
 
 def parse_resume(data):
     prompt = """
@@ -33,9 +29,10 @@ def parse_resume(data):
     result = chain_extract.invoke(input={'data': data})
 
     try:
-        return result.content  # Ensure it's valid JSON
+        return result.content
     except json.JSONDecodeError:
         return {"error": "Failed to parse resume data."}
+
 
 def parse_job(content):
     extract = PromptTemplate.from_template(
@@ -47,7 +44,8 @@ def parse_job(content):
     )
     chain_extract = extract | llm
     result = chain_extract.invoke(input={'content': content})
-    return result.content  # Ensure it's valid JSON
+    return result.content
+
 
 def scrape_page(url):
     loader = WebBaseLoader(url)
@@ -57,6 +55,7 @@ def scrape_page(url):
         return json_content
     except Exception as e:
         return {"error": f"Error scraping the URL: {str(e)}"}
+
 
 def process_resume_and_job(resume, job):
     extract = PromptTemplate.from_template(
@@ -72,7 +71,7 @@ def process_resume_and_job(resume, job):
     result = chain_extract.invoke(input={'resume': resume, 'job': job})
     return result.content
 
-# UI Layout
+
 st.header("Upload Resume and Job URL")
 uploaded_resume = st.file_uploader("Choose a PDF file", type="pdf")
 url_input = st.text_input(label="Enter Job URL")
@@ -97,21 +96,16 @@ if st.button("Submit"):
             with st.spinner("Scraping job information..."):
                 job_json = scrape_page(url_input)
 
-    # Display results side by side
     col1, col2 = st.columns(2)
 
     with col1:
         with st.expander("Resume"):
-        # st.subheader("Resume JSON")
             st.code(resume_json)
 
     with col2:
         with st.expander("Job"):
-        # st.subheader("Job JSON")
             st.code(job_json)
 
-    # Get Feedback
     if resume_json and job_json:
         feedback = process_resume_and_job(resume_json, job_json)
-        # st.subheader("Feedback")
         st.markdown(feedback)
